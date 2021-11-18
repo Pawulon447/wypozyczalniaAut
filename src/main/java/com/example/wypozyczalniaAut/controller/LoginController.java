@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/all")
 public class LoginController {
+
     UserService userService;
     CarService carService;
     String loggedUserEmail;
@@ -29,9 +29,9 @@ public class LoginController {
     public String loginAccount(String email, String password){
 
         UserRequest userRequest=new UserRequest(email,password);
+        System.out.println(userRequest);
         try {
             userService.loginUser(userRequest);
-
 
         }catch (UserServiceException e){
 
@@ -42,6 +42,7 @@ public class LoginController {
         loggedUserEmail=email;
         carService.setLoggedUser(userService.getLoggedUser());
         System.out.println("welcome "+email);
+
         return "login-success";
     }
 
@@ -51,7 +52,10 @@ public class LoginController {
         return "index";
     }
 
-
+    @GetMapping("login-success")
+    public String loginSuccess(){
+        return "login-success";
+    }
 
     @GetMapping("log-out")
     public void logOut(){

@@ -52,9 +52,13 @@ public class UserService {
 
     public void loginUser(UserRequest userRequest){
         User searchedAccount= userRepository.findByEmail(userRequest.getEmail());
+
+
+        System.out.println(searchedAccount);
         if( null==searchedAccount){
             throw new UserServiceException("account email not found");
         }
+
         else if(userRequest.getPassword1().equals(searchedAccount.getPassword())){
             System.out.println("welcome "+searchedAccount.getEmail());
             loggedUser=searchedAccount;

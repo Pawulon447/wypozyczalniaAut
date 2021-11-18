@@ -92,11 +92,17 @@ public class CarService {
 
 
     public void returnCar(){
-        loggedUser.getRentedCar().setIsRented(false);
-        loggedUser.getRentedCar().setRenter(null);
-        carRepository.saveAndFlush(loggedUser.getRentedCar());
-        loggedUser.setRentedCar(null);
-        userService.getUserRepository().save(loggedUser);
+        if(loggedUser.getRentedCar()==null){
+            System.out.println("you dont have a rented car ");
+        }else{
+            loggedUser.getRentedCar().setIsRented(false);
+            loggedUser.getRentedCar().setRenter(null);
+            carRepository.saveAndFlush(loggedUser.getRentedCar());
+            loggedUser.setRentedCar(null);
+            userService.getUserRepository().save(loggedUser);
+
+        }
+
     }
 
 
