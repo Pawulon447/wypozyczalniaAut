@@ -1,5 +1,6 @@
 package com.example.wypozyczalniaAut.repository;
 
+import com.example.wypozyczalniaAut.model.Car;
 import com.example.wypozyczalniaAut.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -14,4 +15,7 @@ public interface UserRepository extends JpaRepository<User,Integer> {
     public User findByPassword(String password);
 
     public User findByName(String name);
+
+
+    public User findByRentedCar(Car rentedCar);
 }

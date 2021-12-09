@@ -6,12 +6,12 @@ import com.example.wypozyczalniaAut.repository.CarRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 public class CarService {
-   private UserService userService;
-   private CarRepository carRepository;
-   private User loggedUser;
+    private UserService userService;
+    private CarRepository carRepository;
 
 
     public CarService(UserService userService, CarRepository carRepository) {
@@ -19,97 +19,96 @@ public class CarService {
         this.carRepository = carRepository;
     }
 
-    public List<Car> getCars(){
-        List<Car> cars=carRepository.findAll();
-        System.out.println();
-        cars.forEach(System.out::println);
+    public List<Car> getCars() {
+        List<Car> cars = carRepository.findAll();
+        System.out.println(cars);
         return cars;
     }
 
-    public void editCar(int id, String name,double price, Boolean rented){
-        Car searchedCar=carRepository.findById(id);
-        if (searchedCar==null){
+    public void editCar(int id, Car editedCar) {
+        Car searchedCar = getCarById(id);
+        if (searchedCar == null) {
             throw new UserServiceException(" not found");
-
-        }else {
+        } else {
             System.out.println(searchedCar);
-            if(!rented&&searchedCar.getRenter()!=null){
-                clearRentedCar(searchedCar);
-                searchedCar.setRenter(null);
-            }
-            searchedCar.setName(name);
-            searchedCar.setPrice(price);
-            searchedCar.setIsRented(rented);
 
-            carRepository.save(searchedCar);
+            if (!editedCar.getIsRented() && searchedCar.getIsRented() != null) {
+                clearRentedCar(searchedCar);
+            }
+            carRepository.save(editedCar);
             System.out.println(carRepository.findById(id));
         }
     }
 
-    public void clearRentedCar(Car editedCar){
-        Car searchedCar=carRepository.findById(editedCar.getId());
-        User searchedUSer=searchedCar.getRenter();
+    public void clearRentedCar(Car editedCar) {
+        User searchedUSer = userService.getUserRepository().findByRentedCar(editedCar);
         searchedUSer.setRentedCar(null);
         userService.getUserRepository().save(searchedUSer);
     }
 
 
-    public void addCar(String name,double price){
-        Car car=new Car(name,price);
+    public void addCar(Car car) {
         carRepository.save(car);
-
-
-        System.out.println(carRepository.findByName(name));
-
-    }
-    public void checkCar(int id){
-        Car searchedCar=carRepository.findById(id);
-        if(searchedCar==null){
-            throw new UserServiceException("car not found");
-
-        }
-        if(searchedCar.getIsRented()){
-            System.out.println("This car is unavailable");
-            throw new UserServiceException("this car is unavailable");
-        }
-        if(loggedUser.getRentedCar()!=null){
-            System.out.println("you already have rented car");
-
-        }else{
-            assignCar(searchedCar);
-        }
     }
 
-    public void assignCar(Car searchedCar){
+    public void rentCarAdmin(int carId, int userId) {
+        Car searchedCar = getCarById(carId);
+        User searchedUser = userService.getUserRepository().findById(userId).orElse(null);
+        checkCar(searchedCar, searchedUser);
+        assignCar(searchedCar, searchedUser);
+    }
+
+
+    public void checkCar(Car searchedCar, User searchedUser) {
+
+        if (searchedCar == null) {
+            throw new CarServiceException("car not found", 404);
+        }
+        if (searchedUser == null) {
+            throw new UserServiceException("user not found");
+        }
+        if (searchedCar.getIsRented()) {
+
+            throw new CarServiceException("This car is unavailable", 409);
+        }
+        if (searchedUser.getRentedCar() != null) {
+            throw new CarServiceException("you already have rented car", 409);
+        }
+    }
+
+    public void assignCar(Car searchedCar, User searchedUser) {
         searchedCar.setIsRented(true);
-        searchedCar.setRenter(loggedUser);
         carRepository.save(searchedCar);
-
-
-        loggedUser.setRentedCar(searchedCar);
-        userService.getUserRepository().save(loggedUser);
+        searchedUser.setRentedCar(searchedCar);
+        userService.getUserRepository().save(searchedUser);
     }
 
-
-    public void returnCar(){
-        if(loggedUser.getRentedCar()==null){
-            System.out.println("you dont have a rented car ");
-        }else{
-            loggedUser.getRentedCar().setIsRented(false);
-            loggedUser.getRentedCar().setRenter(null);
-            carRepository.saveAndFlush(loggedUser.getRentedCar());
-            loggedUser.setRentedCar(null);
-            userService.getUserRepository().save(loggedUser);
-
+    public void returnCarCheck(int userId) {
+        User searchedUser = userService.getUserRepository().findById(userId).orElse(null);
+        if (searchedUser == null) {
+            throw new UserServiceException("User not found");
         }
-
+        if (searchedUser.getRentedCar() == null) {
+            throw new CarServiceException("This user doesn't have a rented car ", 409);
+        } else {
+            returnCar(searchedUser);
+        }
     }
 
-
-
-    public void setLoggedUser(User loggedUser) {
-        this.loggedUser = loggedUser;
+    public void returnCar(User searchedUser) {
+        searchedUser.getRentedCar().setIsRented(false);
+        carRepository.saveAndFlush(searchedUser.getRentedCar());
+        searchedUser.setRentedCar(null);
+        userService.getUserRepository().save(searchedUser);
     }
 
+    public void deleteCar(int id) {
+        Car deletedCar = carRepository.findById(id).orElseThrow(() -> new NoSuchElementException("Car with this id not found"));
+        clearRentedCar(carRepository.findById(id).get());
+        carRepository.delete(deletedCar);
+    }
 
+    public Car getCarById(int id) {
+        return carRepository.findById(id).orElse(null);
+    }
 }

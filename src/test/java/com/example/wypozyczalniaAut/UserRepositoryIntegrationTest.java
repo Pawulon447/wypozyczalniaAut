@@ -27,10 +27,7 @@ public class UserRepositoryIntegrationTest {
         User janusz = new User("janusz");
         entityManager.persist(janusz);
         entityManager.flush();
-
-
         User found = userRepository.findByName(janusz.getName());
-
 
         assertThat(found.getName())
                 .isEqualTo(janusz.getName());

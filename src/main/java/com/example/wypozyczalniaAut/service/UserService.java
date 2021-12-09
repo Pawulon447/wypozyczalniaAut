@@ -11,73 +11,63 @@ import java.util.Optional;
 public class UserService {
 
     private UserRepository userRepository;
-    private User loggedUser;
 
     public UserService(UserRepository userRepository) {
 
         this.userRepository = userRepository;
     }
 
-    public void checkUser(UserRequest userRequest){
+    public void checkUser(UserRequest userRequest) {
         System.out.println(userRequest);
-       User searchedAccount= userRepository.findByEmail(userRequest.getEmail());
-
-
-        if(searchedAccount!=null){
+        User searchedAccount = userRepository.findByEmail(userRequest.getEmail());
+        if (searchedAccount != null) {
             System.out.println("account exists");
             throw new UserServiceException("account exists");
         }
-        if(!userRequest.getPassword1().equals(userRequest.getPassword2())){
+        if (!userRequest.getPassword1().equals(userRequest.getPassword2())) {
 
             System.out.println("passwords do not match");
             throw new UserServiceException("passwords do not match");
 
-        }else {
+        } else {
             createAccount(userRequest);
         }
-
     }
 
 
-    public void createAccount(UserRequest userRequest){
-        User account=new User(userRequest.getEmail(),userRequest.getName(),userRequest.getSurname(), userRequest.getPassword1());
+    public void createAccount(UserRequest userRequest) {
+        User account = new User(userRequest.getEmail(), userRequest.getName(), userRequest.getSurname(), userRequest.getPassword1());
         userRepository.save(account);
         showAccount(account.getEmail());
     }
 
-    public void showAccount(String email){
-        System.out.println( userRepository.findByEmail(email));
+    public void showAccount(String email) {
+        System.out.println(userRepository.findByEmail(email));
     }
 
+    public void logOut(int id) {
+        User searchedUser = userRepository.findById(id).get();
+        searchedUser.setLogged(false);
 
-    public void loginUser(UserRequest userRequest){
-        User searchedAccount= userRepository.findByEmail(userRequest.getEmail());
+    }
 
+    public void loginUser(UserRequest userRequest) {
+        User searchedAccount = userRepository.findByEmail(userRequest.getEmail());
 
         System.out.println(searchedAccount);
-        if( null==searchedAccount){
+        if (null == searchedAccount) {
             throw new UserServiceException("account email not found");
-        }
-
-        else if(userRequest.getPassword1().equals(searchedAccount.getPassword())){
-            System.out.println("welcome "+searchedAccount.getEmail());
-            loggedUser=searchedAccount;
-
-        }else {
-
+        } else if (userRequest.getPassword1().equals(searchedAccount.getPassword())) {
+            System.out.println("welcome " + searchedAccount.getEmail());
+            searchedAccount.setLogged(true);
+            userRepository.save(searchedAccount);
+        } else {
             throw new UserServiceException("wrong password");
         }
-    }
-
-    public User getLoggedUser() {
-        return loggedUser;
     }
 
     public UserRepository getUserRepository() {
         return userRepository;
     }
 
-    public void setLoggedUser(User loggedUser) {
-        this.loggedUser = loggedUser;
-    }
 }

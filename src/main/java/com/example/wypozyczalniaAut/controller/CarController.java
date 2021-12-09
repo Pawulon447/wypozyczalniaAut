@@ -2,53 +2,75 @@ package com.example.wypozyczalniaAut.controller;
 
 import com.example.wypozyczalniaAut.model.Car;
 import com.example.wypozyczalniaAut.service.CarService;
-import org.springframework.stereotype.Controller;
+import com.example.wypozyczalniaAut.service.CarServiceException;
+import com.example.wypozyczalniaAut.service.UserServiceException;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import java.net.URI;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @RestController
 public class CarController {
 
-    CarService carService;
+    private CarService carService;
 
     public CarController(CarService carService) {
         this.carService = carService;
     }
 
-    @GetMapping("show-cars")
-    public List<Car> showCars(){
+    @GetMapping("api/cars")
+    public List<Car> getCars() {
         return carService.getCars();
     }
 
-
-    @PostMapping("/edit-car")
-    public void editCars(int id,String name,double price, Boolean rented){
-        carService.editCar(id,name,price, rented);
-
-
-    }
-    @PostMapping("/add-car")
-    public void addCar(String name,double price){
-        carService.addCar(name,price);
-
-
-
-    }
-    @PostMapping("rent-car")
-    public void rentCar(int id){
-        carService.checkCar(id);
-
+    @GetMapping("api/cars/{id}")
+    public Car getCarById(@PathVariable int id) {
+        return carService.getCarById(id);
     }
 
-
-    @GetMapping("return-car")
-    public void returnCar()
-    {
-        carService.returnCar();
+    @PostMapping("api/cars/{id}")
+    public void editCars(@PathVariable int id, @RequestBody Car car) {
+        car.setId(id);
+        carService.editCar(id, car);
     }
 
+    @PostMapping("api/cars")
+    public ResponseEntity<Car> addCar(@RequestBody Car car) {
+        System.out.println(car);
+        carService.addCar(car);
+        return ResponseEntity.created(URI.create("api/cars/" + car.getId())).body(car);
+    }
+
+    @PostMapping("api/cars/{carId}/users/{userId}")
+    public ResponseEntity<Void> rentCar(@PathVariable int carId, @PathVariable int userId) {
+
+        try {
+            carService.rentCarAdmin(carId, userId);
+
+        } catch (CarServiceException e) {
+            return ResponseEntity.status(e.getStatus()).header("error", e.getMessage()).build();
+        } catch (UserServiceException e) {
+            return ResponseEntity.notFound().header("error", e.getMessage()).build();
+        }
+        return ResponseEntity.ok().build();
+    }
+
+
+    @GetMapping("api/return-car/{id}")
+    public void returnCar(int id) {
+        carService.returnCarCheck(id);
+    }
+
+    @DeleteMapping("api/cars/{id}")
+    public ResponseEntity<Void> deleteCar(@PathVariable int id) {
+        try {
+            carService.deleteCar(id);
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.notFound().header("error", e.getMessage()).build();
+        }
+        return ResponseEntity.noContent().build();
+
+    }
 }

@@ -16,30 +16,26 @@ public class RegisterController {
     }
 
 
-    @GetMapping("register")
-    public String register()
-    {
+    @GetMapping("api/register")
+    public String register() {
         return "register";
     }
 
-    @PostMapping("/register-send")
-    public String registerAccount(String email,String name,String surname, String password1, String password2){
-        UserRequest userRequest=new UserRequest(email,name,surname, password1,password2);
+    @PostMapping("api/register-send")
+    public String registerAccount(String email, String name, String surname, String password1, String password2) {
+        UserRequest userRequest = new UserRequest(email, name, surname, password1, password2);
         try {
             userService.checkUser(userRequest);
-        }catch (UserServiceException e){
+        } catch (UserServiceException e) {
 
             return "error";
         }
-
-
         return "register-success";
     }
 
 
-    @GetMapping("/register-success")
-    public String registerSuccess()
-    {
+    @GetMapping("api/register-success")
+    public String registerSuccess() {
         return "register-success";
     }
 

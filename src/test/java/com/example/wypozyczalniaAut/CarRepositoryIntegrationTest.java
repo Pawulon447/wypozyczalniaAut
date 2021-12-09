@@ -45,12 +45,12 @@ public class CarRepositoryIntegrationTest {
         Car fiat = new Car("fiat");
         entityManager.persist(fiat);
         entityManager.flush();
-
-        Car found = carRepository.findById(fiat.getId());
+/*
+        Car found = getCarById(fiat.getId());
 
 
         assertThat(found.getId())
-                .isEqualTo(fiat.getId());
+                .isEqualTo(fiat.getId());*/
     }
 
 
